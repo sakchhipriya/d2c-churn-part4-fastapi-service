@@ -49,3 +49,33 @@ def predict(data: CustomerData):
         "risk_explanation":
         "Low engagement and support issues may indicate churn risk."
     }
+
+# Batch Predict Endpoint
+
+class BatchRequest(BaseModel):
+    customers: list[CustomerData]
+
+
+@app.post("/batch_predict")
+def batch_predict(request: BatchRequest):
+
+    results = []
+
+    for customer in request.customers:
+
+        df = pd.DataFrame([customer.dict()])
+
+        probability = float(
+            model.predict_proba(df)[0][1]
+        )
+
+        prediction = int(
+            model.predict(df)[0]
+        )
+
+        results.append({
+            "churn_probability": round(probability,2),
+            "predicted_class": prediction
+        })
+
+    return {"predictions": results}
